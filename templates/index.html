@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cycle Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-lg" x-data="{
+        name: '',
+        pname: '',
+        start_date: '',
+        cycles: [],
+        nextCycle: '',
+        async fetchHistory() {
+            let response = await fetch('/history');
+            this.cycles = await response.json();
+        },
+        async addCycle() {
+            let response = await fetch('/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: this.name, start_date: this.start_date })
+            });
+            if (response.ok) {
+                this.fetchHistory();
+                this.name = '';
+                this.start_date = '';
+            }
+        },
+        async deleteCycle(date, name) {
+            let response = await fetch('/cycle?date=' + date + '&name=' + name,
+          {
+                method: 'DELETE',
+            });
+            if (response.ok) {
+                this.fetchHistory();
+            }
+        },
+        async predict() {
+            let response = await fetch('/predict/'+this.pname);
+            let data = await response.json();
+            this.nextCycle = data.next_cycle_start || 'Not enough data';
+        },
+        async fetchVisualizations() {
+          alert('Under development');
+        },
+        renderChart(id, imageData) {
+          alert('Under development');
+        }
+    }" x-init="fetchHistory()">
+    
+        <h2 class="text-2xl font-bold mb-4">Cycle Tracker</h2>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Name</label>
+            <input x-model="name" type="text" class="mt-1 p-2 w-full border rounded-lg">
+        </div>
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Date</label>
+            <input x-model="start_date" type="date" class="mt-1 p-2 w-full border rounded-lg">
+        </div>
+        <button @click="addCycle()" class="bg-blue-500 text-white px-4 py-2 rounded-lg">Add Cycle</button>
+
+        <h3 class="mt-6 text-xl font-bold">History</h3>
+        <ul class="mt-2 space-y-2">
+            <template x-for="cycle in cycles" :key="cycle.id">
+              <li class="p-2 bg-gray-200 rounded-lg flex gap-4 items-center justify-between">
+                <span class="" x-text="cycle.start_date + ' - ' + cycle.name"></span>
+                <a class="text-right p-2 bg-red-400 hover:bg-red-500 rounded-lg" @click="deleteCycle(cycle.start_date, cycle.name)">Delete</a>
+              </li>
+            </template>
+        </ul>
+
+        <div>
+        <h3 class="mt-6 text-xl font-bold">Predict Next Cycle</h3>
+        <label class="block text-sm font-medium text-gray-700">Name</label>
+        <input x-model="pname" type="text" class="mt-1 p-2 w-full border rounded-lg">
+        <button @click="predict()" class="mt-4 bg-green-500 text-white px-4 py-2 rounded-lg">Predict Next Cycle</button>
+        <p class="mt-2 text-lg font-semibold" x-text="nextCycle"></p>
+        </div>
+
+
+        <h3 class="mt-6 text-xl font-bold">Visualizations</h3>
+        <button @click="fetchVisualizations()" class="mt-4 bg-purple-500 text-white px-4 py-2 rounded-lg">Load Charts</button>
+        <div class="mt-4">
+            <canvas id="cycleChart" class="w-full h-64"></canvas>
+        </div>
+        <div class="mt-4">
+            <canvas id="distributionChart" class="w-full h-64"></canvas>
+        </div>
+    </div>
+</body>
+</html>
+

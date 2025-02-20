@@ -1,6 +1,7 @@
 import os
 import click
 from datetime import datetime, timedelta
+from data_viz import generate_cycle_length_plot, generate_distribution_plot
 from models import *
 
 @click.group()
@@ -40,6 +41,11 @@ def add(start_date, name):
         click.echo(f"Error: {e}")
     finally:
         session.close()
+
+@cli.command()
+def visualize():
+    """Generate and save cycle visualizations"""
+    ...
 
 @cli.command()
 @click.argument("name")

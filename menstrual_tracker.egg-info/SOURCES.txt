@@ -1,0 +1,6 @@
+pyproject.toml
+menstrual_tracker.egg-info/PKG-INFO
+menstrual_tracker.egg-info/SOURCES.txt
+menstrual_tracker.egg-info/dependency_links.txt
+menstrual_tracker.egg-info/requires.txt
+menstrual_tracker.egg-info/top_level.txt
