@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "menstrual_tracker"
+version = "0.1.0"
+description = "A CLI tool to manage menstrual cycle information."
+authors = [
+    { name = "Arnav Ghosh", email = "arnavghosh.official.2004@gmail.com" }
+]
+dependencies = [
+    "sqlalchemy",
+    "click"
+]
