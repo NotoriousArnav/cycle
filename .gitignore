@@ -1,3 +1,4 @@
-__pycaxhe__
+__pycache__
 db.sqlite3
 .venv
+uv.lock

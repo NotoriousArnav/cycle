@@ -1,49 +1,52 @@
 import os
 import click
 from datetime import datetime, timedelta
-from sqlalchemy import create_engine, Column, Integer, Date
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-
-# Database setup
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'db.sqlite3')}"
-engine = create_engine(DATABASE_URL)
-Base = declarative_base()
-
-class Cycle(Base):
-    __tablename__ = 'cycles'
-    id = Column(Integer, primary_key=True)
-    start_date = Column(Date, nullable=False)
-
-Base.metadata.create_all(engine)
-Session = sessionmaker(bind=engine)
+from models import *
 
 @click.group()
 def cli():
     pass
 
 @cli.command()
-@click.argument('start_date')
-def add(start_date):
-    """Add a new period start date (YYYY-MM-DD)."""
+def init_db():
+    """Initialize the database."""
+    Base.metadata.create_all(engine)
+    click.echo("Database initialized successfully.")
+
+@cli.command()
+@click.argument("start_date")
+@click.argument("name")
+def add(start_date, name):
+    """Add a new period start date (YYYY-MM-DD) of a person"""
     session = Session()
     try:
         date = datetime.strptime(start_date, "%Y-%m-%d").date()
-        cycle = Cycle(start_date=date)
+        existing_cycle = session.query(Cycle).filter_by(
+                start_date=date,
+                name=name
+            ).first()
+        if existing_cycle:
+            click.echo("Error: A cycle with this date and name already exists.")
+            session.close()
+            return
+        cycle = Cycle(start_date=date, name=name)
         session.add(cycle)
         session.commit()
-        click.echo(f"Recorded cycle starting on {start_date}.")
+        click.echo(f"Recorded cycle\n{cycle}")
     except ValueError:
         click.echo("Error: Invalid date format. Please use YYYY-MM-DD.")
+    except Exception as e:
+        session.rollback()  # Rollback the session on failure
+        click.echo(f"Error: {e}")
     finally:
         session.close()
 
 @cli.command()
+@click.argument("name")
 def predict():
     """Predict the next period start date based on average cycle length."""
     session = Session()
-    cycles = session.query(Cycle).order_by(Cycle.start_date).all()
+    cycles = session.query(Cycle).filter_by(name=name).order_by(Cycle.start_date).all()
     if len(cycles) < 2:
         click.echo("Not enough data to predict the next cycle.")
         return
@@ -67,8 +70,9 @@ def history():
         click.echo("No period history available.")
         return
     click.echo("Period History:")
+    click.echo("Start Date\tName")
     for cycle in cycles:
-        click.echo(f"- {cycle.start_date}")
+        click.echo(f"{cycle.start_date}\t{cycle.name}")
     session.close()
 
 if __name__ == "__main__":
